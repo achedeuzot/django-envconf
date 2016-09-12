@@ -196,6 +196,7 @@ Supported Types
 - url
 - path (environ.Path)
 - db_url
+
   - PostgreSQL: postgres://, pgsql://, psql:// or postgresql://
   - PostGIS: postgis://
   - MySQL: mysql:// or mysql2://
@@ -205,6 +206,7 @@ Supported Types
   - Oracle: oracle://
   - LDAP: ldap://
 - cache_url
+
   - Dummy: dummycache://
   - Database: dbcache://
   - File: filecache://
@@ -213,12 +215,14 @@ Supported Types
   - Python memory: pymemcache://
   - Redis: rediscache://
 - search_url
+
   - ElasticSearch: elasticsearch://
   - Solr: solr://
   - Whoosh: whoosh://
   - Xapian: xapian://
   - Simple cache: simple://
 - email_url
+
   - Dummy mail: dummymail://
   - SMTP: smtp://
   - SMTP+SSL: smtp+ssl://
@@ -250,6 +254,7 @@ Compatibility
 -------------
 
 Python 2.6, 2.7, 3.3, 3.4, 3.5
+
 Django 1.4 -> 1.10
 
 
@@ -268,7 +273,9 @@ Tested on `Django`_ 1.9.9, 1.10.1 with Python 2.7, 3.4, 3.5
 Changelog
 ---------
 
-0.1.0 - 12 Sept 2016
+
+0.1.0, 0.2.0, 0.3.* - 12 Sept 2016
 
 - Fork from ``django_environ`` and update of codebase: removal of six dependencly, better oracle support,
+  better URL parsing
 
