@@ -262,7 +262,7 @@ Django 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10
 Credits
 -------
 
-- `django-environ`_ and it's own credits ;)
+- `django-environ`_ and its contributors & own creditsof course ! Thanks for the awesome package :)
 
 .. _django-environ: https://github.com/joke2k/django-environ
 
