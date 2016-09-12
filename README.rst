@@ -1,6 +1,6 @@
-===========================
+==============
 Django EnvConf
-===========================
+==============
 
 .. image:: https://travis-ci.org/achedeuzot/django-envconf.svg?branch=master
     :target: https://travis-ci.org/achedeuzot/django-envconf.svg?branch=master
