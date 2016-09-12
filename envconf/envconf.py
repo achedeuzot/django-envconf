@@ -9,13 +9,12 @@ import sys
 import warnings
 from .path import Path
 
-# Patch for urlparse
+# Patch for urllib
 try:
-    # Default on Python 3
     from urllib import parse as urlparse
 except ImportError:
-    # Python 2
     import urlparse
+    import urllib
 
 # Patch for basestring to work under Python 3
 try:
@@ -44,6 +43,14 @@ logger = logging.getLogger(__name__)
 # return int if possible
 def _cast_int(v):
     return int(v) if hasattr(v, 'isdigit') and v.isdigit() else v
+
+def _cast_urlstr(v):
+    try:
+        # Python 3
+        return urlparse.unquote_plus(v) if isinstance(v, str) else v
+    except AttributeError:
+        # Python 2
+        return urllib.unquote_plus(v) if isinstance(v, str) else v
 
 # back compatibility with redis_cache package
 DJANGO_REDIS_DRIVER = 'django_redis.cache.RedisCache'
@@ -134,22 +141,23 @@ class Env(object):
     def __init__(self, **scheme):
         self.scheme = scheme
 
-    def __call__(self, var, cast=None, default=NOTSET, parse_default=False):
-        return self.get_value(var, cast=cast, default=default, parse_default=parse_default)
+    def __call__(self, var, cast=None, default=NOTSET, parse_default=False, resolve_proxies=True):
+        return self.get_value(var, cast=cast, default=default, parse_default=parse_default,
+                              resolve_proxies=resolve_proxies)
 
     # Shortcuts
 
-    def str(self, var, default=NOTSET):
+    def str(self, var, default=NOTSET, resolve_proxies=True):
         """
         :rtype: str
         """
-        return self.get_value(var, default=default)
+        return self.get_value(var, default=default, resolve_proxies=resolve_proxies)
 
-    def unicode(self, var, default=NOTSET):
+    def unicode(self, var, default=NOTSET, resolve_proxies=True):
         """Helper for python2
         :rtype: unicode
         """
-        return self.get_value(var, cast=str, default=default)
+        return self.get_value(var, cast=str, default=default, resolve_proxies=resolve_proxies)
 
     def bool(self, var, default=NOTSET):
         """
@@ -236,13 +244,14 @@ class Env(object):
         """
         return Path(self.get_value(var, default=default), **kwargs)
 
-    def get_value(self, var, cast=None, default=NOTSET, parse_default=False):
+    def get_value(self, var, cast=None, default=NOTSET, parse_default=False, resolve_proxies=True):
         """Return value for given environment variable.
 
         :param var: Name of variable.
         :param cast: Type to cast return value as.
         :param default: If var not present in environ, return this instead.
         :param parse_default: force to parse default..
+        :param resolve_proxies: resolve proxied values, ie values like $MYVAR
 
         :returns: Value from environment or default (if set)
         """
@@ -282,9 +291,12 @@ class Env(object):
             value = default
 
         # Resolve any proxied values
-        if hasattr(value, 'startswith') and value.startswith('$'):
+        if resolve_proxies and hasattr(value, 'startswith') and value.startswith('$'):
             value = value.lstrip('$')
             value = self.get_value(value, cast=cast, default=default)
+
+        if cast is None and default is not None and not isinstance(default, NoValue):
+            cast = type(default)
 
         if value != default or (parse_default and value):
             value = self.parse_value(value, cast)
@@ -355,7 +367,7 @@ class Env(object):
         and using the "file" portion as the filename of the database.
         This has the effect of four slashes being present for an absolute file path:
 
-        >>> from environ import Env
+        >>> from envconf import Env
         >>> Env.db_url_config('sqlite:////full/path/to/your/file.sqlite')
         {'ENGINE': 'django.db.backends.sqlite3', 'HOST': '',
         'NAME':'/full/path/to/your/file.sqlite', 'PASSWORD': '', 'PORT': '', 'USER': ''}
@@ -380,7 +392,12 @@ class Env(object):
 
         # Remove query strings.
         path = url.path[1:]
-        path = path.split('?', 2)[0]
+        try:
+            # Python 3
+            path = urlparse.unquote_plus(path.split('?', 2)[0])
+        except AttributeError:
+            # Python 2
+            path = urllib.unquote_plus(path.split('?', 2)[0])
 
         # if we are using sqlite and we have no path, then assume we
         # want an in-memory database (this is the behaviour of sqlalchemy)
@@ -394,8 +411,8 @@ class Env(object):
         # Update with environment configuration.
         config.update({
             'NAME': path or '',
-            'USER': url.username or '',
-            'PASSWORD': url.password or '',
+            'USER': _cast_urlstr(url.username) or '',
+            'PASSWORD': _cast_urlstr(url.password) or '',
             'HOST': url.hostname or '',
             'PORT': _cast_int(url.port) or '',
         })
@@ -603,7 +620,7 @@ class Env(object):
         return config
 
     @classmethod
-    def read_dot_env(cls, env_file=None, **overrides):
+    def read_env(cls, env_file=None, **overrides):
         """Read a .env file into os.environ.
 
         If not given a path to a dotenv path, does filthy magic stack backtracking

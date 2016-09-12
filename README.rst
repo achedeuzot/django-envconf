@@ -26,8 +26,8 @@ Quick start
     env = Env(  # Set default values and casting
         DEBUG=(bool, False)
     )
-    env.read_dot_env()  # Tries to read the `.env` file which is next to the `manage.py` script.
-                        # It's probably better to give the path to be sure it'll read the correct file.
+    env.read_env()  # Tries to read the `.env` file which is next to the `manage.py` script.
+                    # It's probably better to give the path to be sure it'll read the correct file.
 
 
 2. Create a ``.env`` file at the root of your project
@@ -143,8 +143,29 @@ There are some convenience methods:
     path='/some/path', params='', query='var=foo', fragment='')
 
 
-Last but not leas: proxying values. Useful in environments such as Heroku. That way, if you
-change your mind later on, you just need to change the configuration (see below)
+Proxied Values
+==============
+An environment value or default can reference another environ value by referring to it with a $ sign.  For example:
+
+.. code-block:: python
+
+    PROXIED_VAL = 'hello'
+    TEST_VAL ='$PROXIED_VAL'
+    environ('TEST_VAL') == 'hello
+    environ('UNKNOWN_VAL', default='$PROXIED_VAL') == 'hello'
+
+Proxy values are resolved by default.  To turn off resolving proxy values
+pass ``resolve_proxies=False`` to ``environ``, ``environ.str``, or ``environ.unicode``.
+
+Ex:  ``environ('DJANGO_SECRET_KEY', '$1233FJSIFWR44', resolve_proxies=False)``
+
+If you get an infinite recursion when using environ most likely you have an unresolved and perhaps
+unintentional proxy value in an environ string.
+For example ``environ('DJANGO_SECRET_KEY', '$1233FJSIFWR44')`` will cause an infinite
+recursion unless you add ``resolve_proxies=False``.
+
+This is very useful in environment such as Heroku. That way, if you
+change your mind later on, you just need to change the configuration (see below) and not your code.
 
 .. code-block:: python
 
@@ -155,7 +176,10 @@ change your mind later on, you just need to change the configuration (see below)
     assert smtp_login == 'foo'
 
     # Change of mind
+    # Environment variales: MANDRILL_SMTP_LOGIN=bar
     # SMTP_LOGIN='$MANDRILL_SMTP_LOGIN'
+    smtp_login = env('SMTP_LOGIN)  # Look ma', no hands !
+    assert smtp_login == 'bar'
 
 
 Supported Types

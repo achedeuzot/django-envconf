@@ -11,6 +11,22 @@ except ImportError:
     class ImproperlyConfigured(Exception):
         pass
 
+# Patch for basestring to work under Python 3
+try:
+    unicode = unicode
+except NameError:
+    # 'unicode' is undefined, must be Python 3
+    str = str
+    unicode = str
+    bytes = bytes
+    basestring = (str,bytes)
+else:
+    # 'unicode' exists, must be Python 2
+    str = str
+    unicode = unicode
+    bytes = str
+    basestring = basestring
+
 
 from envconf import Env, Path, REDIS_DRIVER
 
@@ -71,7 +87,10 @@ class BaseTests(unittest.TestCase):
         os.environ = self._old_environ
 
     def assertTypeAndValue(self, type_, expected, actual):
-        self.assertEqual(type_, type(actual))
+        if type_ is basestring:
+            self.assertTrue(isinstance(actual, basestring))
+        else:
+            self.assertEqual(type_, type(actual))
         self.assertEqual(expected, actual)
 
 
@@ -114,6 +133,11 @@ class EnvTests(BaseTests):
 
     def test_proxied_value(self):
         self.assertEqual('bar', self.env('PROXIED_VAR'))
+
+    def test_disabling_proxies(self):
+        self.assertTypeAndValue(basestring, '$STR_VAR', self.env('PROXIED_VAR', resolve_proxies=False))
+        self.assertTypeAndValue(basestring, '$STR_VAR', self.env.str('PROXIED_VAR', resolve_proxies=False))
+        self.assertTypeAndValue(basestring, '$STR_VAR', self.env.unicode('PROXIED_VAR', resolve_proxies=False))
 
     def test_int_list(self):
         self.assertTypeAndValue(list, [42, 33], self.env('INT_LIST', cast=[int]))
@@ -230,6 +254,14 @@ class EnvTests(BaseTests):
         root = self.env.path('PATH_VAR')
         self.assertTypeAndValue(Path, Path(self.PATH), root)
 
+    def test_smart_cast(self):
+        self.assertEqual(self.env.get_value('STR_VAR', default='string'), 'bar')
+        self.assertEqual(self.env.get_value('BOOL_TRUE_VAR', default=True), True)
+        self.assertEqual(self.env.get_value('BOOL_FALSE_VAR', default=True), False)
+        self.assertEqual(self.env.get_value('INT_VAR', default=1), 42)
+        self.assertEqual(self.env.get_value('FLOAT_VAR', default=1.2), 33.3)
+
+
 
 class FileEnvTests(EnvTests):
 
@@ -238,7 +270,7 @@ class FileEnvTests(EnvTests):
         Env.ENVIRON = {}
         self.env = Env()
         file_path = Path(__file__, is_file=True)('.env-test')
-        self.env.read_dot_env(file_path, PATH_VAR=Path(__file__, is_file=True).__root__)
+        self.env.read_env(file_path, PATH_VAR=Path(__file__, is_file=True).__root__)
 
 class SubClassTests(EnvTests):
 
