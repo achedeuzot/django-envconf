@@ -259,12 +259,10 @@ Credits
 
 - `django-environ`_
 
-.. _django-environ: https://github.com/joke2k/django-environ
-
-
 Tested on `Django`_ 1.9.9, 1.10.1 with Python 2.7, 3.4, 3.5
 
 .. _Django: http://www.djangoproject.com/
+.. _django-environ: https://github.com/joke2k/django-environ
 
 ---------
 Changelog
@@ -272,4 +270,5 @@ Changelog
 
 0.1.0 - 12 Sept 2016
 
-- Fork from `django_environ`_ and update of codebase: removal of six dependencly, better oracle support,
+- Fork from ``django_environ`` and update of codebase: removal of six dependencly, better oracle support,
+
