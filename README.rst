@@ -255,7 +255,7 @@ Compatibility
 
 Python 2.6, 2.7, 3.3, 3.4, 3.5
 
-Django 1.4 -> 1.10
+Django 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10
 
 
 -------
@@ -263,10 +263,6 @@ Credits
 -------
 
 - `django-environ`_
-
-Tested on `Django`_ 1.9.9, 1.10.1 with Python 2.7, 3.4, 3.5
-
-.. _Django: http://www.djangoproject.com/
 .. _django-environ: https://github.com/joke2k/django-environ
 
 ---------
