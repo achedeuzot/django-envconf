@@ -143,6 +143,21 @@ There are some convenience methods:
     path='/some/path', params='', query='var=foo', fragment='')
 
 
+Last but not leas: proxying values. Useful in environments such as Heroku. That way, if you
+change your mind later on, you just need to change the configuration (see below)
+
+.. code-block:: python
+
+    # Environment variables: MAILGUN_SMTP_LOGIN=foo,
+    # SMTP_LOGIN='$MAILGUN_SMTP_LOGIN'
+
+    smtp_login = env('SMTP_LOGIN')
+    assert smtp_login == 'foo'
+
+    # Change of mind
+    # SMTP_LOGIN='$MANDRILL_SMTP_LOGIN'
+
+
 Supported Types
 ===============
 - str
