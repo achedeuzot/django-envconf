@@ -4,4 +4,4 @@ from __future__ import unicode_literals
 from .envconf import *
 from .path import *
 
-__version__ = '0.3.2'
+__version__ = '0.3.3'
