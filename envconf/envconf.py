@@ -603,7 +603,7 @@ class Env(object):
         return config
 
     @classmethod
-    def read_env(cls, env_file=None, **overrides):
+    def read_dot_env(cls, env_file=None, **overrides):
         """Read a .env file into os.environ.
 
         If not given a path to a dotenv path, does filthy magic stack backtracking

@@ -238,7 +238,7 @@ class FileEnvTests(EnvTests):
         Env.ENVIRON = {}
         self.env = Env()
         file_path = Path(__file__, is_file=True)('.env-test')
-        self.env.read_env(file_path, PATH_VAR=Path(__file__, is_file=True).__root__)
+        self.env.read_dot_env(file_path, PATH_VAR=Path(__file__, is_file=True).__root__)
 
 class SubClassTests(EnvTests):
 

@@ -22,11 +22,12 @@ Quick start
 
 .. code-block:: python
 
-    import envconf
-    env = envconf.Env(  # Set default values and casting
+    from envconf import Env
+    env = Env(  # Set default values and casting
         DEBUG=(bool, False)
     )
-    env.read_dot_env()  # read .env file at the project root. You can pass an explicit path to it if needed.
+    env.read_dot_env()  # Tries to read the `.env` file which is next to the `manage.py` script.
+                        # It's probably better to give the path to be sure it'll read the correct file.
 
 
 2. Create a ``.env`` file at the root of your project
@@ -36,10 +37,10 @@ Quick start
     DEBUG=on  # or off / false
     # DJANGO_SETTINGS_MODULE=myapp.settings.dev
     SECRET_KEY=Tom-Marvolo-Riddle
-    DATABASE_URL=psql://urser:un-githubbedpassword@127.0.0.1:8458/database
-    # DATABASE_URL=sqlite:///my-local-sqlite.db  # sqlite
+    DATABASE_URL=psql://user:un-gitted-password@127.0.0.1:8458/database
+    # DATABASE_URL=sqlite:////my-local-sqlite.db  # sqlite, notice the 4 slashes. See below for more cases.
     CACHE_URL=memcache://127.0.0.1:11211,127.0.0.1:11212,127.0.0.1:11213
-    REDIS_URL=rediscache://127.0.0.1:6379:1?client_class=django_redis.client.DefaultClient&password=redis-un-githubbed-password
+    REDIS_URL=rediscache://127.0.0.1:6379:1?client_class=django_redis.client.DefaultClient&password=un-gitted-password
 
 3. Then fetch the variable you want from the environment in your ``settings.py`` file:
 
@@ -75,6 +76,72 @@ Directly from git
 -----
 Usage
 -----
+In your settings or configuration module, first either import the standard parser or a Django schema:
+
+.. code-block:: python
+
+    # Default
+    from envconf import Env
+    env = Env()
+
+    # Schemas
+    from envconf.schemas.django110 import Django110Env as env
+    env('DEBUG')  # defaults to False
+    # Defaults with the following:
+    # DEBUG bool
+    # SECRET_KEY str
+    # DATABASES extracted from DATABASE_URL to dict()
+
+``env`` can be called two ways:
+
+- Type explicit: ``env('VAR_NAME', cast=bool)``
+- Type implicit (see below for supported types): ``env.TYPE('ANOTHER_VAR')``. If type is not specified, it defaults
+  to ``str``
+
+Casting explicitly:
+
+.. code-block:: python
+
+    # Environment variable: MAIL_ENABLED=1
+
+    mail_enabled = env('MAIL_ENABLED', cast=bool)
+    # OR mail_enabled = env.bool('MAIL_ENABLED')
+    assert mail_enabled is True
+
+Casting nested types (lists and dicts):
+
+.. code-block:: python
+
+    # Environment variable: FOO=1,2,3
+    foo = env('FOO'), cast=list(int))
+    assert foo == [1, 2, 3]
+
+You can also set defaults:
+
+.. code-block:: python
+
+    # Environment variable MAX_ROWS has not been defined
+    max_rows = env.int('MAX_ROWS', default=100)
+    assert max_rows == 100
+
+There are some convenience methods:
+- json (a regular JSON string is expected)
+- url (which returns a ``urlparse.ParseResult`` object)
+
+.. code-block:: python
+
+    # Environment variable: DATA={"foo":"bar","baz":true}
+    data = env.json('DATA')
+    # data = {
+    #   "foo": "bar",
+    #   "baz": True,
+    # }
+
+    # Environment variable: SERVICE=ftp://user:password@example.com/some/path?var=foo
+    >>> env.url('SERVICE')
+    ParseResult(scheme='ftp', netloc='user:password@example.com',
+    path='/some/path', params='', query='var=foo', fragment='')
+
 
 Supported Types
 ===============
@@ -94,7 +161,7 @@ Supported Types
   - PostGIS: postgis://
   - MySQL: mysql:// or mysql2://
   - MySQL for GeoDjango: mysqlgis://
-  - SQLITE: sqlite:// (sqlite://:memory: for in-memory database)
+  - SQLITE: sqlite:// (sqlite://:memory: for in-memory database, or sqlite:////file/path [4 slashes !])
   - SQLITE with SPATIALITE for GeoDjango: spatialite://
   - Oracle: oracle://
   - LDAP: ldap://
