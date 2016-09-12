@@ -245,6 +245,14 @@ License
 Django-envconf is licensed under the BSD License - see the LICENSE file for details
 
 
+-------------
+Compatibility
+-------------
+
+Python 2.6, 2.7, 3.3, 3.4, 3.5
+Django 1.4 -> 1.10
+
+
 -------
 Credits
 -------
