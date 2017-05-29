@@ -379,11 +379,17 @@ class DatabaseTestSuite(unittest.TestCase):
         url = Env.db_url_config(url)
         self.assertEqual(url['CONN_MAX_AGE'], 600)
 
-        url = 'mysql://user:pass@host:1234/dbname?init_command=SET storage_engine=INNODB'
+        url = 'postgres://user:pass@host:1234/dbname?conn_max_age=None'
+        url = Env.db_url_config(url)
+        self.assertEqual(url['CONN_MAX_AGE'], None)
+
+        url = 'mysql://user:pass@host:1234/dbname?init_command=SET storage_engine=INNODB&other_option=None'
         url = Env.db_url_config(url)
         self.assertEqual(url['OPTIONS'], {
             'init_command': 'SET storage_engine=INNODB',
+            'other_option': None
         })
+
 
     def test_database_ldap_url(self):
         url = 'ldap://cn=admin,dc=nodomain,dc=org:some_secret_password@ldap.nodomain.org/'
@@ -513,6 +519,10 @@ class CacheTestSuite(unittest.TestCase):
             'CULL_FREQUENCY': 0,
         })
 
+        url = 'filecache:///var/tmp/django_cache?timeout=None&max_entries=1000&cull_frequency=0'
+        url = Env.cache_url_config(url)
+        self.assertEqual(url['TIMEOUT'], None)
+
     def test_custom_backend(self):
         url = 'memcache://127.0.0.1:5400?foo=option&bars=9001'
         backend = 'django_redis.cache.RedisCache'
@@ -525,6 +535,10 @@ class CacheTestSuite(unittest.TestCase):
             'BARS': 9001,
         })
 
+        url = 'memcache://127.0.0.1:5400?foo=None&bars=9001'
+        url = Env.cache_url_config(url, backend)
+
+        self.assertEqual(url['OPTIONS']['FOO'], None)
 
 class SearchTestSuite(unittest.TestCase):
 
