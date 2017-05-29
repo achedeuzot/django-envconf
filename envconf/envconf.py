@@ -44,6 +44,9 @@ logger = logging.getLogger(__name__)
 def _cast_int(v):
     return int(v) if hasattr(v, 'isdigit') and v.isdigit() else v
 
+def _cast_none(v):
+    return None if v == 'None' else v
+
 def _cast_urlstr(v):
     try:
         # Python 3
@@ -432,9 +435,9 @@ class Env(object):
             config_options = {}
             for k, v in urlparse.parse_qs(url.query).items():
                 if k.upper() in cls._DB_BASE_OPTIONS:
-                    config.update({k.upper(): _cast_int(v[0])})
+                    config.update({k.upper(): _cast_none(_cast_int(v[0]))})
                 else:
-                    config_options.update({k: _cast_int(v[0])})
+                    config_options.update({k: _cast_none(_cast_int(v[0]))})
             config['OPTIONS'] = config_options
 
         if engine:
@@ -488,7 +491,7 @@ class Env(object):
         if url.query:
             config_options = {}
             for k, v in urlparse.parse_qs(url.query).items():
-                opt = {k.upper(): _cast_int(v[0])}
+                opt = {k.upper(): _cast_none(_cast_int(v[0]))}
                 if k.upper() in cls._CACHE_BASE_OPTIONS:
                     config.update(opt)
                 else:
