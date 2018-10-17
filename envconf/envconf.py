@@ -306,8 +306,6 @@ class Env(object):
 
         return value
 
-    # Class and static methods
-
     @classmethod
     def parse_value(cls, value, cast):
         """Parse and cast provided value
